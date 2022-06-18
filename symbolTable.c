@@ -9,7 +9,7 @@
 #define LOCAL_MODE    3
 #define GLOBAL_MODE   4
 
-typedef struct symbol_entry *PTR_SYMB;
+typedef struct symbolEntry *PTR_SYMB;
 struct symbolEntry{
     char* name;
     int scope;
@@ -19,11 +19,22 @@ struct symbolEntry{
     int offset;
     int mode;
     int type;
+    int value;//handling only INT has already exaxausted me out...
 }table[MAX_TABLE_SIZE];
+int curTop = 0;
+int stack[MAX_TABLE_SIZE];
 
-extern int curScope = 0;
-extern int curCounter = 0;//inited as 0. it always points to nothing
+int curScope = 0;
+int curCounter = 0;//inited as 0. it always points to nothing
 
+int getCurScope(){return curScope;}
+int getCurCounter(){return curCounter;}
+void setSymbolMemory(int index,int position){
+    table[index].memoryLocation = position;
+}
+int getSymbolMemory(int index){
+    return table[index].memoryLocation;
+}
 void initSymbolTable(){
     bzero(&table[0], sizeof(struct symbolEntry)*MAX_TABLE_SIZE);
 }
@@ -57,4 +68,36 @@ int lookUpSymbol(char* s){
     for(i=curCounter-1;i>=0;i--)
         if(!strcmp(s,table[i].name)) return i;
     return -1;
+}
+
+void setTotalSymbolParam(int index,int totalParam){
+    table[index].totalParam = totalParam;
+}
+
+void setSymbolValue(int index,int value){
+    table[index].value = value;
+}
+
+void initStack(){
+    for(int i=0;i<MAX_TABLE_SIZE;i++)
+        stack[i] = 123456789;
+}
+
+int top(){
+    if(curTop==0)
+        return 123456789;
+    return stack[curTop-1];
+}
+
+void pop(){
+    if(curTop==0)
+        return;
+    stack[curTop] = 123456789;
+    curTop--;
+}
+
+void insert(int val){
+    if(curTop>MAX_TABLE_SIZE)return;
+    stack[curTop] = val;
+    curTop++;
 }

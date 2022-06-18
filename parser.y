@@ -177,7 +177,7 @@ void codeGenAtEndOfFunctionBody(char* functor){
 %nonassoc LV0_N
 %right LV0_R
 
-%type <sVal> giveScalar id ident identList scalarDeclare type type1 type2 type3 type4 mayHaveConst mayHaveSign mayLongOrShort 
+%type <sVal> id ident identList scalarDeclare type type1 type2 type3 type4 mayHaveConst mayHaveSign mayLongOrShort 
 %type <sVal> arrayDeclare lrSquareBracketList giveArray arrayContent item itemList array arrayList
 %type <sVal> functionDeclare parameters parameter parameterList functionDefinition
 %type <sVal> compoundStmt stmtOrVarDeclares stmtOrVarDeclare
@@ -203,11 +203,18 @@ scalarDeclare: type ident identList EOL {char* s = reserveStr(strlen($1)+strlen(
 
 identList: COMMA ident identList {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,$1); strcat(s,$2); strcat(s,$3); $$=s;} | {$$="";};
 
-ident: MULSTAR id {char* s = reserveStr(strlen($1)+strlen($2)); strcat(s,$1); strcat(s,$2); $$=s;} |id {$$=$1;};
+ident:  MULSTAR id {char* s = reserveStr(strlen($1)+strlen($2)); strcat(s,$1); strcat(s,$2); $$=s;} |
+        id {$$=$1;};
 
-id: IDENT giveScalar {char* s = reserveStr(strlen($1)+strlen($2)); strcat(s,$1); strcat(s,$2); $$=s;};
-
-giveScalar: ASSIGN expr {char* s = reserveStr(strlen($1)+strlen($2)); strcat(s,$1); strcat(s,$2); $$=s; }|{$$="";};
+id: IDENT ASSIGN expr   {
+        installSymbol($1);
+        int index = lookUpSymbol($1);
+        fprintf(codegen,"lw t0, 0(sp)  \n");
+        fprintf(codegen,"addi sp,sp, 4 \n");
+        fprintf(codegen,"sw t0, %d(fp)  //assign at id \n", -1*index*4-16);
+        setSymbolMemory(index,-1*index*4-16);
+        } | 
+    IDENT   {};
 
 type:   type1 {$$=$1;} | 
         type2 {$$=$1;} | 
@@ -253,7 +260,12 @@ itemList: COMMA item itemList {char* s = reserveStr(strlen($1)+strlen($2)+strlen
 
 item: expr {$$=$1;} | arrayContent {$$=$1;};
 
-expr:   identOrArray                                  %prec LV0_L   {char*s = reserveStr(strlen($1)); strcat(s,_EXPR_LEFT); strcat(s,$1);                 strcat(s,_EXPR_RIGHT);$$=s;} | //????
+expr:   identOrArray                                  %prec LV0_L   {char*s = reserveStr(strlen($1)); strcat(s,_EXPR_LEFT); strcat(s,$1);                 strcat(s,_EXPR_RIGHT);$$=s;
+            int index = lookUpSymbol($1);
+            int memoryLocation = getSymbolMemory(index);
+            fprintf(codegen,"lw t0, %d(fp)  \n", memoryLocation);
+            fprintf(codegen,"addi sp,sp, -4 \n");
+            fprintf(codegen,"sw t0, 0(sp)   \n\n");} | //????
         INT                                           %prec LV0_L   {
             char*s = reserveStr(strlen(intToString($1))); strcat(s,_EXPR_LEFT); strcat(s,intToString($1));    strcat(s,_EXPR_RIGHT);$$=s;
             //fprintf(codegen,"li t0, %d       \n",$1);
@@ -267,7 +279,9 @@ expr:   identOrArray                                  %prec LV0_L   {char*s = re
         MYCHAR                                        %prec LV0_L   {char*s = reserveStr(strlen($1)); strcat(s,_EXPR_LEFT); strcat(s,$1);                 strcat(s,_EXPR_RIGHT);$$=s;} | 
         MYSTRING                                      %prec LV0_L   {char*s = reserveStr(strlen($1)); strcat(s,_EXPR_LEFT); strcat(s,$1);                 strcat(s,_EXPR_RIGHT);$$=s;} | 
         MYNULL                                        %prec LV0_L   {char*s = reserveStr(5); strcat(s,_EXPR_LEFT); strcat(s,"0");                strcat(s,_EXPR_RIGHT);$$=s;} |
-        LPARENTHESIS expr RPARENTHESIS                %prec LV0_L   {char*s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;}; |
+        LPARENTHESIS expr RPARENTHESIS                %prec LV0_L   {
+            char*s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;
+            }; |
 
         expr ADDONE                                   %prec LV1   {char* s = reserveStr(strlen($1)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,_EXPR_RIGHT); $$=s;} | 
         expr MINUSONE                                 %prec LV1   {char* s = reserveStr(strlen($1)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,_EXPR_RIGHT); $$=s;} |
@@ -286,12 +300,45 @@ expr:   identOrArray                                  %prec LV0_L   {char*s = re
         LPARENTHESIS type MULSTAR RPARENTHESIS expr   %prec LV2  {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)+strlen($4)+strlen($5)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,$4); strcat(s,$5); strcat(s,_EXPR_RIGHT); $$=s;} |
         LPARENTHESIS type RPARENTHESIS expr           %prec LV2  {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)+strlen($4)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,$4); strcat(s,_EXPR_RIGHT); $$=s;} |
 
-        expr MULSTAR    expr                          %prec LV3  {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;} |
-        expr SLASH      expr                          {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;} |
+        expr MULSTAR    expr                          %prec LV3  {
+            char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;
+            fprintf(codegen,"lw t0, 0(sp)   \n");
+            fprintf(codegen,"addi sp,sp, 4  \n");
+            fprintf(codegen,"lw t1, 0(sp)   \n");
+            fprintf(codegen,"addi sp,sp, 4  \n");
+            fprintf(codegen,"mul t0, t0, t1 \n");
+            fprintf(codegen,"addi sp,sp, -4 \n");
+            fprintf(codegen,"sw t0, 0(sp)   \n\n");
+            } |
+        expr SLASH      expr                          {
+            char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;
+            fprintf(codegen,"lw t0, 0(sp)   \n");
+            fprintf(codegen,"addi sp,sp, 4  \n");
+            fprintf(codegen,"lw t1, 0(sp)   \n");
+            fprintf(codegen,"addi sp,sp, 4  \n");
+            fprintf(codegen,"div t0, t1, t0 \n");
+            fprintf(codegen,"addi sp,sp, -4 \n");
+            fprintf(codegen,"sw t0, 0(sp)   \n\n");
+            } |
         expr MOD        expr                          {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;} |
 
-        expr ADD        expr                          {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;} |
-        expr MINUS      expr                          {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;} |
+        expr ADD        expr                          {
+            char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;
+            fprintf(codegen,"lw t0, 0(sp)   \n");
+            fprintf(codegen,"addi sp,sp, 4  \n");
+            fprintf(codegen,"lw t1, 0(sp)   \n");
+            fprintf(codegen,"addi sp,sp, 4  \n");
+            fprintf(codegen,"add t0, t0, t1 \n");
+            fprintf(codegen,"addi sp,sp, -4 \n");
+            fprintf(codegen,"sw t0, 0(sp)   \n\n");} |
+        expr MINUS      expr                          {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;
+            fprintf(codegen,"lw t0, 0(sp)   \n");
+            fprintf(codegen,"addi sp,sp, 4  \n");
+            fprintf(codegen,"lw t1, 0(sp)   \n");
+            fprintf(codegen,"addi sp,sp, 4  \n");
+            fprintf(codegen,"sub t0, t1, t0 \n");
+            fprintf(codegen,"addi sp,sp, -4 \n");
+            fprintf(codegen,"sw t0, 0(sp)   \n\n");} |
         
         expr SHIFTLEFT  expr                          {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;} |
         expr SHIFTRIGHT expr                          {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;} |
@@ -314,7 +361,16 @@ expr:   identOrArray                                  %prec LV0_L   {char*s = re
 
         expr LOGICALOR  expr                          {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;} |
 
-        expr ASSIGN     expr                          {char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;}; 
+        expr ASSIGN     expr                          {
+            char* s = reserveStr(strlen($1)+strlen($2)+strlen($3)); strcat(s,_EXPR_LEFT); strcat(s,$1); strcat(s,$2); strcat(s,$3); strcat(s,_EXPR_RIGHT); $$=s;
+            int index = lookUpSymbol($1);
+            fprintf(codegen,"lw t0, 0(sp)   \n");
+            fprintf(codegen,"addi sp,sp, 4  \n");
+            fprintf(codegen,"lw t1, 0(sp)   \n");
+            fprintf(codegen,"addi sp,sp, 4  \n");
+            fprintf(codegen,"sw t0, %d(fp)  //assign at expr\n", -1*index*4-16);
+            fprintf(codegen,"addi sp,sp, -4 \n");
+            fprintf(codegen,"sw t0, 0(sp)   \n\n");}; 
 
 contiExpr: expr exprList{char* s = reserveStr(strlen($1)+strlen($2)); strcat(s,$1); strcat(s,$2); $$=s;} | {$$="";};
 
@@ -343,7 +399,7 @@ functionDeclare:    type IDENT LPARENTHESIS parameters RPARENTHESIS EOL {
                         $$=s;
                         installSymbol($2);
                         int index = lookUpSymbol($2);
-                        table[index].totalParam = 0;
+                        setTotalSymbolParam(index,0);
                         };
                     
 
@@ -457,7 +513,7 @@ int main(void) {
     }
     fprintf(codegen, ".global codegen\n");
     initSymbolTable();
-
+    initStack();
     yyparse();
     return 0;
 }
