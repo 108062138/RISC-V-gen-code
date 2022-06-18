@@ -1,8 +1,10 @@
 void codegen();
-void codegen()
-{
-  digitalWrite(26, HIGH);
-  delay(1000);
-  digitalWrite(26, LOW);
-  delay(1000);
+
+void codegen() {
+  int a = 42; /* a = -64 */
+  a = a - 4; /* a = 4, *b = 4 */
+  digitalWrite(28, HIGH);
+  delay(a * 1000);
+  digitalWrite(28, LOW);
+  //delay(*b * 1000);
 }

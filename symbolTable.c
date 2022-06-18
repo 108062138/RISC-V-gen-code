@@ -35,6 +35,12 @@ void setSymbolMemory(int index,int position){
 int getSymbolMemory(int index){
     return table[index].memoryLocation;
 }
+void setSymbolType(int index,int type){
+    table[index].type = type;
+}
+int getSymbolType(int index){
+    return table[index].type;
+}
 void initSymbolTable(){
     bzero(&table[0], sizeof(struct symbolEntry)*MAX_TABLE_SIZE);
 }

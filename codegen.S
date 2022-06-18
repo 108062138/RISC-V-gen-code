@@ -18,9 +18,47 @@ sd s11, 0(sp)
 addi s0, sp, 104 
   // END PROLOGUE
   
+li t0, 42       
+addi sp, sp, -4 
+sw t0, 0(sp)    
+//start type ident 
+lw t0, 0(sp)  
+addi sp,sp, 4 
+sw t0, -20(fp) 
+//finish type ident 
+
+lw t0, -20(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+lw t0, -20(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+li t0, 4       
+addi sp, sp, -4 
+sw t0, 0(sp)    
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+sub t0, t1, t0 
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+//enter expr assign 
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+sw t0, 0(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+//finish expr assign 
+
 addi sp, sp, -8  
 sd ra, 0(sp)  
-li t0, 26       
+li t0, 28       
 addi sp, sp, -4 
 sw t0, 0(sp)    
 ld a0, 0(sp)  
@@ -36,9 +74,21 @@ addi sp, sp, 8
 
 addi sp, sp, -8  
 sd ra, 0(sp)  
+lw t0, -20(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
 li t0, 1000       
 addi sp, sp, -4 
 sw t0, 0(sp)    
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+mul t0, t0, t1 
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
 ld a0, 0(sp)  
 addi sp, sp, 4  
 jal ra, delay  
@@ -47,7 +97,7 @@ addi sp, sp, 8
 
 addi sp, sp, -8  
 sd ra, 0(sp)  
-li t0, 26       
+li t0, 28       
 addi sp, sp, -4 
 sw t0, 0(sp)    
 ld a0, 0(sp)  
@@ -58,17 +108,6 @@ sw t0, 0(sp)
 ld a1, 0(sp)  
 addi sp, sp, 4  
 jal ra,digitalWrite  
-ld ra, 0(sp)  
-addi sp, sp, 8
-
-addi sp, sp, -8  
-sd ra, 0(sp)  
-li t0, 1000       
-addi sp, sp, -4 
-sw t0, 0(sp)    
-ld a0, 0(sp)  
-addi sp, sp, 4  
-jal ra, delay  
 ld ra, 0(sp)  
 addi sp, sp, 8
 
