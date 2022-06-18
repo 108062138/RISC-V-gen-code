@@ -1,0 +1,1 @@
+<func_decl>voidcodegen();</func_decl><func_def>voidcodegen(){<stmt><expr><expr>digitalWrite</expr>(<expr>26</expr>,<expr>HIGH</expr>)</expr>;</stmt><stmt><expr><expr>delay</expr>(<expr>1000</expr>)</expr>;</stmt><stmt><expr><expr>digitalWrite</expr>(<expr>26</expr>,<expr>LOW</expr>)</expr>;</stmt><stmt><expr><expr>delay</expr>(<expr>1000</expr>)</expr>;</stmt>}</func_def>
