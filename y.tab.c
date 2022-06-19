@@ -713,17 +713,17 @@ static const yytype_uint16 yyrline[] =
      234,   235,   236,   237,   238,   239,   241,   242,   243,   244,
      245,   247,   249,   249,   251,   251,   251,   253,   253,   253,
      253,   255,   257,   259,   259,   261,   261,   263,   263,   265,
-     265,   267,   267,   269,   269,   271,   277,   286,   287,   288,
-     289,   290,   294,   295,   297,   300,   308,   316,   317,   318,
-     319,   324,   325,   326,   327,   329,   339,   349,   351,   360,
-     369,   370,   372,   373,   374,   375,   377,   378,   380,   382,
-     384,   386,   388,   390,   404,   404,   406,   406,   408,   410,
-     416,   423,   435,   436,   438,   438,   440,   441,   443,   449,
-     454,   454,   462,   464,   464,   466,   466,   466,   468,   469,
-     470,   471,   472,   473,   474,   475,   479,   482,   485,   475,
-     491,   495,   498,   491,   506,   507,   508,   509,   511,   513,
-     513,   515,   516,   518,   520,   521,   523,   524,   526,   526,
-     528,   530,   531
+     265,   267,   267,   269,   269,   271,   278,   286,   287,   288,
+     289,   290,   294,   295,   297,   299,   310,   321,   322,   323,
+     324,   334,   335,   336,   337,   339,   349,   359,   361,   370,
+     379,   380,   382,   383,   384,   385,   387,   388,   390,   392,
+     394,   396,   398,   400,   437,   437,   439,   439,   441,   443,
+     449,   456,   468,   469,   471,   471,   473,   474,   476,   482,
+     487,   487,   495,   497,   497,   499,   499,   499,   501,   502,
+     503,   504,   505,   506,   507,   508,   512,   515,   518,   508,
+     524,   528,   531,   524,   539,   540,   541,   542,   544,   546,
+     546,   548,   549,   551,   553,   554,   556,   557,   559,   559,
+     561,   563,   564
 };
 #endif
 
@@ -1898,8 +1898,8 @@ yyreduce:
         fprintf(codegen,"lw t0, 0(sp)  \n");
         fprintf(codegen,"addi sp,sp, 4 \n");
         fprintf(codegen,"sw t0, %d(fp) \n", -1*index*4-16);
-        fprintf(codegen,"//finish type ident \n\n");
         setSymbolMemory(index,-1*index*4-16);
+        fprintf(codegen,"//finish place %s into memory and it is stored at %d  \n\n",(yyvsp[-2].sVal),-1*index*4-16);
         }
 #line 1905 "y.tab.c" /* yacc.c:1646  */
     break;
@@ -2152,25 +2152,25 @@ yyreduce:
 
   case 55:
 #line 271 "parser.y" /* yacc.c:1646  */
-    {char*s = reserveStr(strlen((yyvsp[0].sVal)));(yyval.sVal)=s;
+    {char*s = reserveStr(strlen((yyvsp[0].sVal)));strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;//here needs some adjustion
             int index = lookUpSymbol((yyvsp[0].sVal));
             int memoryLocation = getSymbolMemory(index);
+            fprintf(codegen,"// ident: %s and it is stored at %d(fp)  \n", (yyvsp[0].sVal), memoryLocation);
             fprintf(codegen,"lw t0, %d(fp)  \n", memoryLocation);
             fprintf(codegen,"addi sp,sp, -4 \n");
             fprintf(codegen,"sw t0, 0(sp)   \n\n");}
-#line 2162 "y.tab.c" /* yacc.c:1646  */
+#line 2163 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 277 "parser.y" /* yacc.c:1646  */
+#line 278 "parser.y" /* yacc.c:1646  */
     {
             char*s = reserveStr(strlen(intToString((yyvsp[0].iVal)))); strcat(s,_EXPR_LEFT); strcat(s,intToString((yyvsp[0].iVal)));    strcat(s,_EXPR_RIGHT);(yyval.sVal)=s;
-            //fprintf(codegen,"li t0, %d       \n",$1);
-            //fprintf(codegen,"addi sp, sp, -4 \n");
-            //fprintf(codegen,"sw t0, 0(sp)    \n",$1);
+            fprintf(codegen, "//start push %d on the stack       \n", (yyvsp[0].iVal));
             fprintf(codegen, "li t0, %d       \n", (yyvsp[0].iVal));
             fprintf(codegen, "addi sp, sp, -4 \n");
             fprintf(codegen, "sw t0, 0(sp)    \n");
+            fprintf(codegen, "//end push %d on the stack       \n\n", (yyvsp[0].iVal));
             }
 #line 2176 "y.tab.c" /* yacc.c:1646  */
     break;
@@ -2226,85 +2226,96 @@ yyreduce:
     break;
 
   case 65:
-#line 300 "parser.y" /* yacc.c:1646  */
+#line 299 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;
             int index = lookUpSymbol((yyvsp[0].sVal));
+            int memoryLocation = getSymbolMemory(index);
+            fprintf(codegen,"// enter & expr, retriving the address \n");
+            fprintf(codegen,"// ident: %s and it is stored at %d(fp)  \n", (yyvsp[0].sVal), memoryLocation);
             fprintf(codegen,"lw t0, 0(sp)   \n");
             fprintf(codegen,"addi sp,sp, 4  \n");
-            fprintf(codegen,"li t0, %d      \n", index);
+            fprintf(codegen,"li t0, %d      \n", memoryLocation);
             fprintf(codegen,"addi sp,sp, -4 \n");
             fprintf(codegen,"sw t0, 0(sp)   \n");
             }
-#line 2239 "y.tab.c" /* yacc.c:1646  */
+#line 2242 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 308 "parser.y" /* yacc.c:1646  */
+#line 310 "parser.y" /* yacc.c:1646  */
     {
-            char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;
+            char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal)));strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;
             int index = lookUpSymbol((yyvsp[0].sVal));
+            int memoryLocation = getSymbolMemory(index);
             fprintf(codegen,"lw t0, 0(sp)   \n");
             fprintf(codegen,"addi sp,sp, 4  \n");
-            fprintf(codegen,"lw t1, %d(fp)\n", index);
-            fprintf(codegen,"addi sp,sp, -4  \n");
-            fprintf(codegen,"sw t1, 0(sp)\n");}
-#line 2252 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 67:
-#line 316 "parser.y" /* yacc.c:1646  */
-    {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
+            fprintf(codegen,"lw t1, %d(fp)  \n", memoryLocation);//get the address
+            fprintf(codegen,"add t2, t1, fp \n");
+            fprintf(codegen,"lw t3, 0(t2)   \n");
+            fprintf(codegen,"addi sp,sp, -4 \n");
+            fprintf(codegen,"sw t3, 0(sp)   \n");}
 #line 2258 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 68:
-#line 317 "parser.y" /* yacc.c:1646  */
+  case 67:
+#line 321 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
 #line 2264 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 69:
-#line 318 "parser.y" /* yacc.c:1646  */
+  case 68:
+#line 322 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
 #line 2270 "y.tab.c" /* yacc.c:1646  */
     break;
 
+  case 69:
+#line 323 "parser.y" /* yacc.c:1646  */
+    {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
+#line 2276 "y.tab.c" /* yacc.c:1646  */
+    break;
+
   case 70:
-#line 319 "parser.y" /* yacc.c:1646  */
+#line 324 "parser.y" /* yacc.c:1646  */
     {
             char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;
             int index = lookUpSymbol((yyvsp[0].sVal));
             fprintf(codegen,"lw t0, 0(sp)   \n");
+            fprintf(codegen,"addi fp, fp, 4   \n");
+            fprintf(codegen,"li t1, -1   \n");
+            fprintf(codegen,"mul t0, t0, t1   \n");
+            fprintf(codegen,"addi fp, fp, -4   \n");
+            fprintf(codegen,"sw t0, 0(sp)   \n\n");
             }
-#line 2280 "y.tab.c" /* yacc.c:1646  */
+#line 2291 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 324 "parser.y" /* yacc.c:1646  */
+#line 334 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2286 "y.tab.c" /* yacc.c:1646  */
+#line 2297 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 325 "parser.y" /* yacc.c:1646  */
+#line 335 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2292 "y.tab.c" /* yacc.c:1646  */
+#line 2303 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 326 "parser.y" /* yacc.c:1646  */
+#line 336 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-4].sVal))+strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-4].sVal)); strcat(s,(yyvsp[-3].sVal)); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2298 "y.tab.c" /* yacc.c:1646  */
+#line 2309 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 327 "parser.y" /* yacc.c:1646  */
+#line 337 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-3].sVal)); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2304 "y.tab.c" /* yacc.c:1646  */
+#line 2315 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 329 "parser.y" /* yacc.c:1646  */
+#line 339 "parser.y" /* yacc.c:1646  */
     {
             char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;
             fprintf(codegen,"lw t0, 0(sp)   \n");
@@ -2315,11 +2326,11 @@ yyreduce:
             fprintf(codegen,"addi sp,sp, -4 \n");
             fprintf(codegen,"sw t0, 0(sp)   \n\n");
             }
-#line 2319 "y.tab.c" /* yacc.c:1646  */
+#line 2330 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 339 "parser.y" /* yacc.c:1646  */
+#line 349 "parser.y" /* yacc.c:1646  */
     {
             char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;
             fprintf(codegen,"lw t0, 0(sp)   \n");
@@ -2330,17 +2341,17 @@ yyreduce:
             fprintf(codegen,"addi sp,sp, -4 \n");
             fprintf(codegen,"sw t0, 0(sp)   \n\n");
             }
-#line 2334 "y.tab.c" /* yacc.c:1646  */
+#line 2345 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 349 "parser.y" /* yacc.c:1646  */
+#line 359 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2340 "y.tab.c" /* yacc.c:1646  */
+#line 2351 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 351 "parser.y" /* yacc.c:1646  */
+#line 361 "parser.y" /* yacc.c:1646  */
     {
             char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;
             fprintf(codegen,"lw t0, 0(sp)   \n");
@@ -2350,11 +2361,11 @@ yyreduce:
             fprintf(codegen,"add t0, t0, t1 \n");
             fprintf(codegen,"addi sp,sp, -4 \n");
             fprintf(codegen,"sw t0, 0(sp)   \n\n");}
-#line 2354 "y.tab.c" /* yacc.c:1646  */
+#line 2365 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 360 "parser.y" /* yacc.c:1646  */
+#line 370 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;
             fprintf(codegen,"lw t0, 0(sp)   \n");
             fprintf(codegen,"addi sp,sp, 4  \n");
@@ -2363,159 +2374,182 @@ yyreduce:
             fprintf(codegen,"sub t0, t1, t0 \n");
             fprintf(codegen,"addi sp,sp, -4 \n");
             fprintf(codegen,"sw t0, 0(sp)   \n\n");}
-#line 2367 "y.tab.c" /* yacc.c:1646  */
+#line 2378 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 369 "parser.y" /* yacc.c:1646  */
+#line 379 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2373 "y.tab.c" /* yacc.c:1646  */
+#line 2384 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 370 "parser.y" /* yacc.c:1646  */
+#line 380 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2379 "y.tab.c" /* yacc.c:1646  */
+#line 2390 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 372 "parser.y" /* yacc.c:1646  */
+#line 382 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2385 "y.tab.c" /* yacc.c:1646  */
+#line 2396 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 373 "parser.y" /* yacc.c:1646  */
+#line 383 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2391 "y.tab.c" /* yacc.c:1646  */
+#line 2402 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 374 "parser.y" /* yacc.c:1646  */
+#line 384 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2397 "y.tab.c" /* yacc.c:1646  */
+#line 2408 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 375 "parser.y" /* yacc.c:1646  */
+#line 385 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2403 "y.tab.c" /* yacc.c:1646  */
+#line 2414 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 86:
-#line 377 "parser.y" /* yacc.c:1646  */
+#line 387 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2409 "y.tab.c" /* yacc.c:1646  */
+#line 2420 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 87:
-#line 378 "parser.y" /* yacc.c:1646  */
+#line 388 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2415 "y.tab.c" /* yacc.c:1646  */
+#line 2426 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 380 "parser.y" /* yacc.c:1646  */
+#line 390 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2421 "y.tab.c" /* yacc.c:1646  */
+#line 2432 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 382 "parser.y" /* yacc.c:1646  */
+#line 392 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2427 "y.tab.c" /* yacc.c:1646  */
+#line 2438 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 384 "parser.y" /* yacc.c:1646  */
+#line 394 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2433 "y.tab.c" /* yacc.c:1646  */
+#line 2444 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 386 "parser.y" /* yacc.c:1646  */
+#line 396 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2439 "y.tab.c" /* yacc.c:1646  */
+#line 2450 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 388 "parser.y" /* yacc.c:1646  */
+#line 398 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;}
-#line 2445 "y.tab.c" /* yacc.c:1646  */
+#line 2456 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 390 "parser.y" /* yacc.c:1646  */
+#line 400 "parser.y" /* yacc.c:1646  */
     {
             char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_EXPR_LEFT); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_EXPR_RIGHT); (yyval.sVal)=s;
-            int index = lookUpSymbol((yyvsp[-2].sVal));
-            int memoryLocation = getSymbolMemory(index);
-            fprintf(codegen,"//enter expr assign \n");
-            fprintf(codegen,"lw t0, 0(sp)   \n");
-            fprintf(codegen,"addi sp,sp, 4  \n");
-            fprintf(codegen,"lw t1, 0(sp)   \n");
-            fprintf(codegen,"addi sp,sp, 4  \n");
-            fprintf(codegen,"sw t0, %d(fp)  \n", memoryLocation);
-            fprintf(codegen,"addi sp,sp, -4 \n");
-            fprintf(codegen,"sw t0, 0(sp)   \n");
-            fprintf(codegen,"//finish expr assign \n\n");}
-#line 2463 "y.tab.c" /* yacc.c:1646  */
+            char* test = reserveStr(strlen((yyvsp[-2].sVal)));
+            strcat(test,(yyvsp[-2].sVal));
+            printf("$1: %s and 0th is %c\n",test,test[0]);//
+            if(test[0]=='*'){//handle pointer
+                char* cutStarOnlyPtr = reserveStr(strlen(test));
+                strncpy(cutStarOnlyPtr,test+1,strlen(test)-1);
+                printf("cut head result: %s\n", cutStarOnlyPtr);
+
+                int index = lookUpSymbol(cutStarOnlyPtr);
+                int ptrMemoryLocation = getSymbolMemory(index);
+                fprintf(codegen,"//enter expr assign \n");
+                fprintf(codegen,"// ident: %s and it is stored at %d(fp)  \n", (yyvsp[-2].sVal), ptrMemoryLocation);
+                fprintf(codegen,"lw t0, 0(sp)   \n");
+                fprintf(codegen,"addi sp,sp, 4  \n");
+                fprintf(codegen,"lw t1, 0(sp)   \n");
+                fprintf(codegen,"addi sp,sp, 4  \n");
+                fprintf(codegen,"lw t2, %d(fp)  \n", ptrMemoryLocation);
+                fprintf(codegen,"add t3, t2, fp \n");
+                fprintf(codegen,"sw t0, 0(t3) \n");
+                fprintf(codegen,"//finish expr assign \n\n");
+            }else{//normal case
+                int index = lookUpSymbol((yyvsp[-2].sVal));
+                int memoryLocation = getSymbolMemory(index);
+                fprintf(codegen,"//enter expr assign \n");
+                fprintf(codegen,"// ident: %s and it is stored at %d(fp)  \n", (yyvsp[-2].sVal), memoryLocation);
+                fprintf(codegen,"lw t0, 0(sp)   \n");
+                fprintf(codegen,"addi sp,sp, 4  \n");
+                fprintf(codegen,"lw t1, 0(sp)   \n");
+                fprintf(codegen,"addi sp,sp, 4  \n");
+                fprintf(codegen,"sw t0, %d(fp)  \n", memoryLocation);
+                //fprintf(codegen,"addi sp,sp, -4 \n");
+                //fprintf(codegen,"sw t0, 0(sp)   \n");
+                fprintf(codegen,"//finish expr assign \n\n");
+            }}
+#line 2497 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 404 "parser.y" /* yacc.c:1646  */
+#line 437 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); (yyval.sVal)=s;}
-#line 2469 "y.tab.c" /* yacc.c:1646  */
+#line 2503 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 404 "parser.y" /* yacc.c:1646  */
+#line 437 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)="";}
-#line 2475 "y.tab.c" /* yacc.c:1646  */
+#line 2509 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 406 "parser.y" /* yacc.c:1646  */
+#line 439 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); (yyval.sVal)=s;}
-#line 2481 "y.tab.c" /* yacc.c:1646  */
+#line 2515 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 406 "parser.y" /* yacc.c:1646  */
+#line 439 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)="";}
-#line 2487 "y.tab.c" /* yacc.c:1646  */
+#line 2521 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 408 "parser.y" /* yacc.c:1646  */
+#line 441 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2493 "y.tab.c" /* yacc.c:1646  */
+#line 2527 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 410 "parser.y" /* yacc.c:1646  */
+#line 443 "parser.y" /* yacc.c:1646  */
     {
                         char* s = reserveStr(strlen((yyvsp[-5].sVal))+strlen((yyvsp[-4].sVal))+strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); 
                         strcat(s,_FUNC_DECL_LEFT);
                         strcat(s,(yyvsp[-5].sVal)); strcat(s,(yyvsp[-4].sVal)); strcat(s,(yyvsp[-3].sVal)); strcat(s,(yyvsp[-2].sVal));strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal));
                         strcat(s,_FUNC_DECL_RIGHT);
                         (yyval.sVal)=s;}
-#line 2504 "y.tab.c" /* yacc.c:1646  */
+#line 2538 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 100:
-#line 416 "parser.y" /* yacc.c:1646  */
+#line 449 "parser.y" /* yacc.c:1646  */
     {
                         char* s = reserveStr(strlen((yyvsp[-6].sVal))+strlen((yyvsp[-5].sVal))+strlen((yyvsp[-4].sVal))+strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); 
                         strcat(s,_FUNC_DECL_LEFT);
                         strcat(s,(yyvsp[-6].sVal)); strcat(s,(yyvsp[-5].sVal)); strcat(s,(yyvsp[-4].sVal)); strcat(s,(yyvsp[-3].sVal));strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));
                         strcat(s,_FUNC_DECL_RIGHT);
                         (yyval.sVal)=s;}
-#line 2515 "y.tab.c" /* yacc.c:1646  */
+#line 2549 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 423 "parser.y" /* yacc.c:1646  */
+#line 456 "parser.y" /* yacc.c:1646  */
     {
                         char* s = reserveStr(strlen((yyvsp[-5].sVal))+strlen((yyvsp[-4].sVal))+strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); 
                         strcat(s,_FUNC_DECL_LEFT);
@@ -2526,352 +2560,352 @@ yyreduce:
                         int index = lookUpSymbol((yyvsp[-4].sVal));
                         setTotalSymbolParam(index,0);
                         }
-#line 2530 "y.tab.c" /* yacc.c:1646  */
+#line 2564 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 435 "parser.y" /* yacc.c:1646  */
+#line 468 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2536 "y.tab.c" /* yacc.c:1646  */
+#line 2570 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 436 "parser.y" /* yacc.c:1646  */
+#line 469 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)="";}
-#line 2542 "y.tab.c" /* yacc.c:1646  */
+#line 2576 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 438 "parser.y" /* yacc.c:1646  */
+#line 471 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); (yyval.sVal)=s;}
-#line 2548 "y.tab.c" /* yacc.c:1646  */
+#line 2582 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 438 "parser.y" /* yacc.c:1646  */
+#line 471 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)="";}
-#line 2554 "y.tab.c" /* yacc.c:1646  */
+#line 2588 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 440 "parser.y" /* yacc.c:1646  */
+#line 473 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2560 "y.tab.c" /* yacc.c:1646  */
+#line 2594 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 441 "parser.y" /* yacc.c:1646  */
+#line 474 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2566 "y.tab.c" /* yacc.c:1646  */
+#line 2600 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 443 "parser.y" /* yacc.c:1646  */
+#line 476 "parser.y" /* yacc.c:1646  */
     {
                         char* s = reserveStr(strlen((yyvsp[-5].sVal))+strlen((yyvsp[-4].sVal))+strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal)));
                         strcat(s,_FUNCT_DEF_LEFT);
                         strcat(s,(yyvsp[-5].sVal)); strcat(s,(yyvsp[-4].sVal)); strcat(s,(yyvsp[-3].sVal));strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal));
                         strcat(s,_FUNCT_DEF_RIGHT);
                         (yyval.sVal)=s;}
-#line 2577 "y.tab.c" /* yacc.c:1646  */
+#line 2611 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 449 "parser.y" /* yacc.c:1646  */
+#line 482 "parser.y" /* yacc.c:1646  */
     {
                         char* s = reserveStr(strlen((yyvsp[-6].sVal))+strlen((yyvsp[-5].sVal))+strlen((yyvsp[-4].sVal))+strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal)));
                         strcat(s,_FUNCT_DEF_LEFT);strcat(s,(yyvsp[-6].sVal)); strcat(s,(yyvsp[-5].sVal)); strcat(s,(yyvsp[-4].sVal));strcat(s,(yyvsp[-3].sVal)); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));
                         strcat(s,_FUNCT_DEF_RIGHT);
                         (yyval.sVal)=s;}
-#line 2587 "y.tab.c" /* yacc.c:1646  */
+#line 2621 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 454 "parser.y" /* yacc.c:1646  */
+#line 487 "parser.y" /* yacc.c:1646  */
     {
                         curScope++;
                         setScopeAndOffsetOfParam((yyvsp[-3].sVal));
                         codeGenFuncHeader((yyvsp[-3].sVal));
                     }
-#line 2597 "y.tab.c" /* yacc.c:1646  */
+#line 2631 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 458 "parser.y" /* yacc.c:1646  */
+#line 491 "parser.y" /* yacc.c:1646  */
     {
                         codeGenAtEndOfFunctionBody((yyvsp[-5].sVal));
                         fprintf(codegen,"\n");}
-#line 2605 "y.tab.c" /* yacc.c:1646  */
+#line 2639 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 462 "parser.y" /* yacc.c:1646  */
+#line 495 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); (yyval.sVal)=s;}
-#line 2611 "y.tab.c" /* yacc.c:1646  */
+#line 2645 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 464 "parser.y" /* yacc.c:1646  */
+#line 497 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); (yyval.sVal)=s;}
-#line 2617 "y.tab.c" /* yacc.c:1646  */
+#line 2651 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 464 "parser.y" /* yacc.c:1646  */
+#line 497 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)="";}
-#line 2623 "y.tab.c" /* yacc.c:1646  */
+#line 2657 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 466 "parser.y" /* yacc.c:1646  */
+#line 499 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)=(yyvsp[0].sVal);}
-#line 2629 "y.tab.c" /* yacc.c:1646  */
+#line 2663 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 116:
-#line 466 "parser.y" /* yacc.c:1646  */
+#line 499 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)=(yyvsp[0].sVal);}
-#line 2635 "y.tab.c" /* yacc.c:1646  */
+#line 2669 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 466 "parser.y" /* yacc.c:1646  */
+#line 499 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)=(yyvsp[0].sVal);}
-#line 2641 "y.tab.c" /* yacc.c:1646  */
+#line 2675 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 468 "parser.y" /* yacc.c:1646  */
+#line 501 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,_STMT_LEFT);strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); strcat(s,_STMT_RIGHT);(yyval.sVal)=s;}
-#line 2647 "y.tab.c" /* yacc.c:1646  */
+#line 2681 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 469 "parser.y" /* yacc.c:1646  */
+#line 502 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[0].sVal))); strcat(s,_STMT_LEFT);strcat(s,(yyvsp[0].sVal)); strcat(s,_STMT_RIGHT);(yyval.sVal)=s;}
-#line 2653 "y.tab.c" /* yacc.c:1646  */
+#line 2687 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 120:
-#line 470 "parser.y" /* yacc.c:1646  */
+#line 503 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[0].sVal))); strcat(s,_STMT_LEFT);strcat(s,(yyvsp[0].sVal)); strcat(s,_STMT_RIGHT);(yyval.sVal)=s;}
-#line 2659 "y.tab.c" /* yacc.c:1646  */
+#line 2693 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 471 "parser.y" /* yacc.c:1646  */
+#line 504 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[0].sVal))); strcat(s,_STMT_LEFT);strcat(s,(yyvsp[0].sVal)); strcat(s,_STMT_RIGHT);(yyval.sVal)=s;}
-#line 2665 "y.tab.c" /* yacc.c:1646  */
+#line 2699 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 122:
-#line 472 "parser.y" /* yacc.c:1646  */
+#line 505 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[0].sVal))); strcat(s,_STMT_LEFT);strcat(s,(yyvsp[0].sVal)); strcat(s,_STMT_RIGHT);(yyval.sVal)=s;}
-#line 2671 "y.tab.c" /* yacc.c:1646  */
+#line 2705 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 123:
-#line 473 "parser.y" /* yacc.c:1646  */
+#line 506 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[0].sVal))); strcat(s,_STMT_LEFT);strcat(s,(yyvsp[0].sVal)); strcat(s,_STMT_RIGHT);(yyval.sVal)=s;}
-#line 2677 "y.tab.c" /* yacc.c:1646  */
+#line 2711 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 124:
-#line 474 "parser.y" /* yacc.c:1646  */
+#line 507 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[0].sVal))); strcat(s,_STMT_LEFT);strcat(s,(yyvsp[0].sVal)); strcat(s,_STMT_RIGHT);(yyval.sVal)=s;}
-#line 2683 "y.tab.c" /* yacc.c:1646  */
+#line 2717 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 125:
-#line 475 "parser.y" /* yacc.c:1646  */
+#line 508 "parser.y" /* yacc.c:1646  */
     {
             fprintf(codegen,"addi sp, sp, -8  \n");
             fprintf(codegen,"sd ra, 0(sp)  \n");
         }
-#line 2692 "y.tab.c" /* yacc.c:1646  */
+#line 2726 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 126:
-#line 479 "parser.y" /* yacc.c:1646  */
+#line 512 "parser.y" /* yacc.c:1646  */
     {
             fprintf(codegen,"ld a0, 0(sp)  \n");
             fprintf(codegen,"addi sp, sp, 4  \n");}
-#line 2700 "y.tab.c" /* yacc.c:1646  */
+#line 2734 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 127:
-#line 482 "parser.y" /* yacc.c:1646  */
+#line 515 "parser.y" /* yacc.c:1646  */
     {
             fprintf(codegen,"ld a1, 0(sp)  \n");
             fprintf(codegen,"addi sp, sp, 4  \n");}
-#line 2708 "y.tab.c" /* yacc.c:1646  */
+#line 2742 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 128:
-#line 485 "parser.y" /* yacc.c:1646  */
+#line 518 "parser.y" /* yacc.c:1646  */
     {
             fprintf(codegen,"jal ra,digitalWrite  \n");}
-#line 2715 "y.tab.c" /* yacc.c:1646  */
+#line 2749 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 129:
-#line 487 "parser.y" /* yacc.c:1646  */
+#line 520 "parser.y" /* yacc.c:1646  */
     {
             fprintf(codegen,"ld ra, 0(sp)  \n");
             fprintf(codegen,"addi sp, sp, 8\n\n");
         }
-#line 2724 "y.tab.c" /* yacc.c:1646  */
+#line 2758 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 130:
-#line 491 "parser.y" /* yacc.c:1646  */
+#line 524 "parser.y" /* yacc.c:1646  */
     {
             fprintf(codegen,"addi sp, sp, -8  \n");
             fprintf(codegen,"sd ra, 0(sp)  \n");
         }
-#line 2733 "y.tab.c" /* yacc.c:1646  */
+#line 2767 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 131:
-#line 495 "parser.y" /* yacc.c:1646  */
+#line 528 "parser.y" /* yacc.c:1646  */
     {
             fprintf(codegen,"ld a0, 0(sp)  \n");
             fprintf(codegen,"addi sp, sp, 4  \n");}
-#line 2741 "y.tab.c" /* yacc.c:1646  */
+#line 2775 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 132:
-#line 498 "parser.y" /* yacc.c:1646  */
+#line 531 "parser.y" /* yacc.c:1646  */
     {
             fprintf(codegen,"jal ra, delay  \n");}
-#line 2748 "y.tab.c" /* yacc.c:1646  */
+#line 2782 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 133:
-#line 500 "parser.y" /* yacc.c:1646  */
+#line 533 "parser.y" /* yacc.c:1646  */
     {
             fprintf(codegen,"ld ra, 0(sp)  \n");
             fprintf(codegen,"addi sp, sp, 8\n\n");
         }
-#line 2757 "y.tab.c" /* yacc.c:1646  */
+#line 2791 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 134:
-#line 506 "parser.y" /* yacc.c:1646  */
+#line 539 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); (yyval.sVal)=s;}
-#line 2763 "y.tab.c" /* yacc.c:1646  */
+#line 2797 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 135:
-#line 507 "parser.y" /* yacc.c:1646  */
+#line 540 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); (yyval.sVal)=s;}
-#line 2769 "y.tab.c" /* yacc.c:1646  */
+#line 2803 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 136:
-#line 508 "parser.y" /* yacc.c:1646  */
+#line 541 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); (yyval.sVal)=s;}
-#line 2775 "y.tab.c" /* yacc.c:1646  */
+#line 2809 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 137:
-#line 509 "parser.y" /* yacc.c:1646  */
+#line 542 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal)); (yyval.sVal)=s;}
-#line 2781 "y.tab.c" /* yacc.c:1646  */
+#line 2815 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 138:
-#line 511 "parser.y" /* yacc.c:1646  */
+#line 544 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-8].sVal))+strlen((yyvsp[-7].sVal))+strlen((yyvsp[-6].sVal))+strlen((yyvsp[-5].sVal))+strlen((yyvsp[-4].sVal))+strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-8].sVal)); strcat(s,(yyvsp[-7].sVal)); strcat(s,(yyvsp[-6].sVal)); strcat(s,(yyvsp[-5].sVal));strcat(s,(yyvsp[-4].sVal)); strcat(s,(yyvsp[-3].sVal)); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2787 "y.tab.c" /* yacc.c:1646  */
+#line 2821 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 139:
-#line 513 "parser.y" /* yacc.c:1646  */
+#line 546 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)=(yyvsp[0].sVal);}
-#line 2793 "y.tab.c" /* yacc.c:1646  */
+#line 2827 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 140:
-#line 513 "parser.y" /* yacc.c:1646  */
+#line 546 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)="";}
-#line 2799 "y.tab.c" /* yacc.c:1646  */
+#line 2833 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 141:
-#line 515 "parser.y" /* yacc.c:1646  */
+#line 548 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-4].sVal))+strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-4].sVal)); strcat(s,(yyvsp[-3].sVal)); strcat(s,(yyvsp[-2].sVal)); strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2805 "y.tab.c" /* yacc.c:1646  */
+#line 2839 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 142:
-#line 516 "parser.y" /* yacc.c:1646  */
+#line 549 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-6].sVal))+strlen((yyvsp[-5].sVal))+strlen((yyvsp[-4].sVal))+strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-6].sVal)); strcat(s,(yyvsp[-5].sVal)); strcat(s,(yyvsp[-4].sVal)); strcat(s,(yyvsp[-3].sVal));strcat(s,(yyvsp[-2].sVal));strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2811 "y.tab.c" /* yacc.c:1646  */
+#line 2845 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 143:
-#line 518 "parser.y" /* yacc.c:1646  */
+#line 551 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-6].sVal))+strlen((yyvsp[-5].sVal))+strlen((yyvsp[-4].sVal))+strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-6].sVal)); strcat(s,(yyvsp[-5].sVal)); strcat(s,(yyvsp[-4].sVal)); strcat(s,(yyvsp[-3].sVal));strcat(s,(yyvsp[-2].sVal));strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2817 "y.tab.c" /* yacc.c:1646  */
+#line 2851 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 144:
-#line 520 "parser.y" /* yacc.c:1646  */
+#line 553 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2823 "y.tab.c" /* yacc.c:1646  */
+#line 2857 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 145:
-#line 521 "parser.y" /* yacc.c:1646  */
+#line 554 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)="";}
-#line 2829 "y.tab.c" /* yacc.c:1646  */
+#line 2863 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 146:
-#line 523 "parser.y" /* yacc.c:1646  */
+#line 556 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-3].sVal));strcat(s,(yyvsp[-2].sVal));strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2835 "y.tab.c" /* yacc.c:1646  */
+#line 2869 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 147:
-#line 524 "parser.y" /* yacc.c:1646  */
+#line 557 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-2].sVal));strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2841 "y.tab.c" /* yacc.c:1646  */
+#line 2875 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 148:
-#line 526 "parser.y" /* yacc.c:1646  */
+#line 559 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2847 "y.tab.c" /* yacc.c:1646  */
+#line 2881 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 149:
-#line 526 "parser.y" /* yacc.c:1646  */
+#line 559 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)="";}
-#line 2853 "y.tab.c" /* yacc.c:1646  */
+#line 2887 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 150:
-#line 528 "parser.y" /* yacc.c:1646  */
+#line 561 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-5].sVal))+strlen((yyvsp[-4].sVal))+strlen((yyvsp[-3].sVal))+strlen((yyvsp[-2].sVal))+strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-5].sVal));strcat(s,(yyvsp[-4].sVal));strcat(s,(yyvsp[-3].sVal));strcat(s,(yyvsp[-2].sVal));strcat(s,(yyvsp[-1].sVal)); strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2859 "y.tab.c" /* yacc.c:1646  */
+#line 2893 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 151:
-#line 530 "parser.y" /* yacc.c:1646  */
+#line 563 "parser.y" /* yacc.c:1646  */
     {char* s = reserveStr(strlen((yyvsp[-1].sVal))+strlen((yyvsp[0].sVal))); strcat(s,(yyvsp[-1].sVal));strcat(s,(yyvsp[0].sVal));(yyval.sVal)=s;}
-#line 2865 "y.tab.c" /* yacc.c:1646  */
+#line 2899 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 152:
-#line 531 "parser.y" /* yacc.c:1646  */
+#line 564 "parser.y" /* yacc.c:1646  */
     {(yyval.sVal)="";}
-#line 2871 "y.tab.c" /* yacc.c:1646  */
+#line 2905 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2875 "y.tab.c" /* yacc.c:1646  */
+#line 2909 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -3099,7 +3133,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 533 "parser.y" /* yacc.c:1906  */
+#line 566 "parser.y" /* yacc.c:1906  */
 
 int yylex();
 int main(void) {

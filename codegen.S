@@ -18,54 +18,221 @@ sd s11, 0(sp)
 addi s0, sp, 104 
   // END PROLOGUE
   
-li t0, 42       
+//start push 58 on the stack       
+li t0, 58       
 addi sp, sp, -4 
 sw t0, 0(sp)    
+//end push 58 on the stack       
+
+//start push 17 on the stack       
+li t0, 17       
+addi sp, sp, -4 
+sw t0, 0(sp)    
+//end push 17 on the stack       
+
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+div t0, t1, t0 
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
 //start type ident 
 lw t0, 0(sp)  
 addi sp,sp, 4 
 sw t0, -20(fp) 
-//finish type ident 
+//finish place a into memory and it is stored at -20  
 
+// ident: a and it is stored at -20(fp)  
 lw t0, -20(fp)  
 addi sp,sp, -4 
 sw t0, 0(sp)   
 
-lw t0, -20(fp)  
-addi sp,sp, -4 
-sw t0, 0(sp)   
-
-li t0, 4       
+//start push 2 on the stack       
+li t0, 2       
 addi sp, sp, -4 
 sw t0, 0(sp)    
+//end push 2 on the stack       
+
 lw t0, 0(sp)   
 addi sp,sp, 4  
 lw t1, 0(sp)   
 addi sp,sp, 4  
-sub t0, t1, t0 
+mul t0, t0, t1 
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+//start push 10 on the stack       
+li t0, 10       
+addi sp, sp, -4 
+sw t0, 0(sp)    
+//end push 10 on the stack       
+
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+add t0, t0, t1 
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+//start type ident 
+lw t0, 0(sp)  
+addi sp,sp, 4 
+sw t0, -24(fp) 
+//finish place b into memory and it is stored at -24  
+
+// ident: a and it is stored at -20(fp)  
+lw t0, -20(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+// enter & expr, retriving the address 
+// ident: a and it is stored at -20(fp)  
+lw t0, 0(sp)   
+addi sp,sp, 4  
+li t0, -20      
+addi sp,sp, -4 
+sw t0, 0(sp)   
+//start type ident 
+lw t0, 0(sp)  
+addi sp,sp, 4 
+sw t0, -28(fp) 
+//finish place c into memory and it is stored at -28  
+
+// ident: c and it is stored at -28(fp)  
+lw t0, -28(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, -28(fp)  
+add t2, t1, fp 
+lw t3, 0(t2)   
+addi sp,sp, -4 
+sw t3, 0(sp)   
+// ident: c and it is stored at -28(fp)  
+lw t0, -28(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, -28(fp)  
+add t2, t1, fp 
+lw t3, 0(t2)   
+addi sp,sp, -4 
+sw t3, 0(sp)   
+//start push 1 on the stack       
+li t0, 1       
+addi sp, sp, -4 
+sw t0, 0(sp)    
+//end push 1 on the stack       
+
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+add t0, t0, t1 
 addi sp,sp, -4 
 sw t0, 0(sp)   
 
 //enter expr assign 
+// ident: *c and it is stored at -28(fp)  
 lw t0, 0(sp)   
 addi sp,sp, 4  
 lw t1, 0(sp)   
 addi sp,sp, 4  
-sw t0, 0(fp)  
+lw t2, -28(fp)  
+add t3, t2, fp 
+sw t0, 0(t3) 
+//finish expr assign 
+
+// ident: c and it is stored at -28(fp)  
+lw t0, -28(fp)  
 addi sp,sp, -4 
 sw t0, 0(sp)   
+
+// ident: b and it is stored at -24(fp)  
+lw t0, -24(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+// enter & expr, retriving the address 
+// ident: b and it is stored at -24(fp)  
+lw t0, 0(sp)   
+addi sp,sp, 4  
+li t0, -24      
+addi sp,sp, -4 
+sw t0, 0(sp)   
+//enter expr assign 
+// ident: c and it is stored at -28(fp)  
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+sw t0, -28(fp)  
+//finish expr assign 
+
+// ident: c and it is stored at -28(fp)  
+lw t0, -28(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, -28(fp)  
+add t2, t1, fp 
+lw t3, 0(t2)   
+addi sp,sp, -4 
+sw t3, 0(sp)   
+// ident: b and it is stored at -24(fp)  
+lw t0, -24(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+// ident: a and it is stored at -20(fp)  
+lw t0, -20(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+div t0, t1, t0 
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+//enter expr assign 
+// ident: *c and it is stored at -28(fp)  
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+lw t2, -28(fp)  
+add t3, t2, fp 
+sw t0, 0(t3) 
 //finish expr assign 
 
 addi sp, sp, -8  
 sd ra, 0(sp)  
-li t0, 28       
+//start push 29 on the stack       
+li t0, 29       
 addi sp, sp, -4 
 sw t0, 0(sp)    
+//end push 29 on the stack       
+
 ld a0, 0(sp)  
 addi sp, sp, 4  
+//start push 1 on the stack       
 li t0, 1       
 addi sp, sp, -4 
 sw t0, 0(sp)    
+//end push 1 on the stack       
+
 ld a1, 0(sp)  
 addi sp, sp, 4  
 jal ra,digitalWrite  
@@ -74,18 +241,36 @@ addi sp, sp, 8
 
 addi sp, sp, -8  
 sd ra, 0(sp)  
+// ident: a and it is stored at -20(fp)  
 lw t0, -20(fp)  
 addi sp,sp, -4 
 sw t0, 0(sp)   
 
+//start push 1000 on the stack       
 li t0, 1000       
 addi sp, sp, -4 
 sw t0, 0(sp)    
+//end push 1000 on the stack       
+
 lw t0, 0(sp)   
 addi sp,sp, 4  
 lw t1, 0(sp)   
 addi sp,sp, 4  
 mul t0, t0, t1 
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+//start push 1000 on the stack       
+li t0, 1000       
+addi sp, sp, -4 
+sw t0, 0(sp)    
+//end push 1000 on the stack       
+
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+add t0, t0, t1 
 addi sp,sp, -4 
 sw t0, 0(sp)   
 
@@ -97,17 +282,78 @@ addi sp, sp, 8
 
 addi sp, sp, -8  
 sd ra, 0(sp)  
-li t0, 28       
+//start push 29 on the stack       
+li t0, 29       
 addi sp, sp, -4 
 sw t0, 0(sp)    
+//end push 29 on the stack       
+
 ld a0, 0(sp)  
 addi sp, sp, 4  
+//start push 0 on the stack       
 li t0, 0       
 addi sp, sp, -4 
 sw t0, 0(sp)    
+//end push 0 on the stack       
+
 ld a1, 0(sp)  
 addi sp, sp, 4  
 jal ra,digitalWrite  
+ld ra, 0(sp)  
+addi sp, sp, 8
+
+addi sp, sp, -8  
+sd ra, 0(sp)  
+// ident: b and it is stored at -24(fp)  
+lw t0, -24(fp)  
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+//start push 1000 on the stack       
+li t0, 1000       
+addi sp, sp, -4 
+sw t0, 0(sp)    
+//end push 1000 on the stack       
+
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+mul t0, t0, t1 
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+//start push 250 on the stack       
+li t0, 250       
+addi sp, sp, -4 
+sw t0, 0(sp)    
+//end push 250 on the stack       
+
+//start push 8 on the stack       
+li t0, 8       
+addi sp, sp, -4 
+sw t0, 0(sp)    
+//end push 8 on the stack       
+
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+mul t0, t0, t1 
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+lw t0, 0(sp)   
+addi sp,sp, 4  
+lw t1, 0(sp)   
+addi sp,sp, 4  
+sub t0, t1, t0 
+addi sp,sp, -4 
+sw t0, 0(sp)   
+
+ld a0, 0(sp)  
+addi sp, sp, 4  
+jal ra, delay  
 ld ra, 0(sp)  
 addi sp, sp, 8
 
