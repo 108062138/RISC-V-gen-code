@@ -1,5 +1,5 @@
 # RISC-V-gen-code
-===
+> by popo
 ## abstract
 - This project is about the third project in LJK-NTHU-COMPILER class. Its main purpose targetes to generate RISC-V code based on the parser, which was implemented by the second project.
 ## how to run this project
@@ -12,4 +12,15 @@ riscv64-unknown-elf-gcc -o sample_prog main.c codegen.S
 spike pk sample_prog
 ```
 ## support function
-- Up to level C. That is, basic, 
+- Up to level C. That is, basic, arithmetic, pointer
+  - basic: support `delay()` and `digitalWrite(int argv1,int argv2)`
+    - These function has ABCD part. Their behavior is depitcted at `./parser.y`. I'm going to explain them one by one. 
+    - C(caller calls the function)...
+    - A(for the callee, enter the function body)...
+    - B(for the callee, exit the function body)...
+    - D(for the caller, receive the return value)... 
+  - arithmetic: support `+-*/=()`...
+  - pointer: single level pointer   
+    - The symbol table is intended to tackle pointer. It is implemeted at `./symbolTable.c`
+  
+
